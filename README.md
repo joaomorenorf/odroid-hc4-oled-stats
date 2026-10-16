@@ -1,22 +1,22 @@
 # ODROID HC4 OLED Stats
 
-Versao modificada de [tobetter/odroid-homecloud](https://github.com/tobetter/odroid-homecloud)
-para mostrar estatisticas do sistema no OLED do ODROID HC4. O historico original
-e a licenca MIT foram preservados; veja [LICENSE](./LICENSE).
+A modified version of [tobetter/odroid-homecloud](https://github.com/tobetter/odroid-homecloud)
+that shows system statistics on the ODROID HC4 OLED display. The original
+history and MIT license are preserved; see [LICENSE](./LICENSE).
 
-O repositorio tem outro nome, mas os nomes do pacote
-`odroid-homecloud-display`, do comando `odroid_homecloud_display` e do servico
-`odroid-homecloud-display` foram mantidos para permitir atualizar a instalacao
-anterior. A versao atual e `0.4.0`.
+Although this repository has a different name, the Debian package
+`odroid-homecloud-display`, command `odroid_homecloud_display`, and systemd
+service `odroid-homecloud-display` retain their original names so existing
+installations can be upgraded. The current version is `0.4.1`.
 
-## O que aparece na tela
+## What appears on the screen
 
-O programa usa um SSD1306 I2C de 128 x 64 pixels, com quatro linhas por pagina.
-Atualiza CPU e RAM aproximadamente a cada segundo e alterna paginas a cada cinco
-segundos. As consultas externas podem acrescentar algum atraso.
-**Esta versao mostra estatisticas, nao o relogio do projeto original.**
+The program uses a 128 x 64 pixel I2C SSD1306 display with four lines per page.
+It updates CPU and RAM approximately once per second and switches pages every
+five seconds. External commands can add some delay.
+**This version displays statistics, not the original project's clock.**
 
-Exemplo ilustrativo da primeira pagina (os valores nao sao dados do seu ODROID):
+An illustrative first page (these are not readings from your ODROID):
 
 ```text
 CPU: 12%  48 C
@@ -25,20 +25,22 @@ sd: 8,5 / 31,3 GB
 tank: 450,0 / 2000,0 GB
 ```
 
-- CPU: utilizacao entre duas amostras de `/proc/stat`; temperatura de
-  `/sys/class/thermal/thermal_zone0/temp`, ou `N/A` quando indisponivel.
-- RAM: memoria usada calculada como `MemTotal - MemAvailable`, e memoria total.
-- `sd`: uso do sistema de arquivos montado em `/`, mesmo que ele nao esteja
-  em um cartao SD.
-- `tank`: valores `used` e `used + available` do dataset ZFS chamado `tank`.
-  Nao e uma soma de discos fisicos. ZFS e opcional: sem o comando `zfs` ou sem
-  esse dataset, aparece `tank: unavailable`. Nao e necessario instalar ZFS
-  apenas para usar o display.
-- GB usa base decimal (`1 GB = 1.000.000.000 bytes`), com virgula decimal.
-  Linhas maiores que a largura da tela sao comprimidas horizontalmente para
-  preservar os numeros.
+- CPU: usage between two `/proc/stat` samples, followed by the temperature
+  from `/sys/class/thermal/thermal_zone0/temp`, or `N/A` if unavailable.
+- RAM: used memory, calculated as `MemTotal - MemAvailable`, and total memory.
+- `sd`: usage of the filesystem mounted at `/`, even if it is not an SD card.
+- `tank`: ZFS `used` and `used + available` for the selected dataset, which
+  defaults to `tank`. This is not a sum of physical disk capacities.
+  Set `HOMECLOUD_ZFS_DATASET` to change the dataset and its screen label;
+  see [ZFS configuration](#selecting-a-zfs-pool-or-dataset).
+  If ZFS or the selected dataset is unavailable, this line reads
+  `<dataset>: unavailable`. ZFS is optional; do not install it solely to
+  run the display.
+- GB is decimal (`1 GB = 1,000,000,000 bytes`). The display retains comma
+  decimal separators. Long lines are compressed horizontally to preserve
+  all digits.
 
-Em seguida aparecem as paginas de rede, por exemplo:
+Network pages follow, for example:
 
 ```text
 IPv4: 192.0.2.10
@@ -47,32 +49,32 @@ IPv6: eth0
 abcd:ef01:2345:6789
 ```
 
-O IPv4 acima e um endereco reservado para documentacao e o IPv6 e apenas
-ilustrativo. A quebra do IPv6 depende da fonte instalada; o exemplo nao garante
-os mesmos pontos de quebra no seu dispositivo. A segunda linha identifica a
-interface. O programa inclui IPv4 e somente IPv6 globais, nao temporarios.
-Ignora loopback e interfaces com nomes iniciados por `docker`, `br-` e `veth`,
-alem de enderecos tentativos ou com falha de DAD.
+The IPv4 address above is reserved for documentation; the IPv6 address is
+illustrative. IPv6 line breaks depend on the installed font, so your device
+may split it differently. The second line identifies the interface.
+The program includes IPv4 and only global, non-temporary IPv6 addresses.
+It skips loopback, interfaces whose names start with `docker`, `br-`, or `veth`,
+and tentative addresses or addresses that failed duplicate address detection.
 
-Cada interface/endereco pode gerar paginas adicionais; o IPv6 e quebrado em
-blocos de ate duas linhas. Uma familia sem endereco aparece como `unavailable`.
-Sem enderecos elegiveis aparece uma pagina com `IPv4: unavailable` e
-`IPv6: unavailable`; se a consulta de rede falhar, aparece `IP: unavailable`.
-Depois das paginas de rede, o ciclo volta as estatisticas.
+Each interface/address can produce additional pages. IPv6 addresses are split
+into blocks of up to two lines. A missing address family is shown as
+`unavailable`. With no eligible addresses, the page contains `IPv4: unavailable`
+and `IPv6: unavailable`; if the network query fails, it shows `IP: unavailable`.
+After the network pages, the cycle returns to system statistics.
 
-## Construir em outra maquina (Linux ou WSL)
+## Build on another machine (Linux or WSL)
 
-Use Debian/Ubuntu com `debhelper` 13 e `pybuild-plugin-pyproject` disponiveis
-(por exemplo, Ubuntu 24.04, usado tambem na pipeline). Nao e preciso ter o OLED,
-I2C, systemd em execucao ou a arquitetura ARM na maquina de build.
+Use Debian/Ubuntu with `debhelper` 13 and `pybuild-plugin-pyproject` available,
+such as Ubuntu 24.04, which is also used by the pipeline. The build machine
+does not need an OLED, I2C hardware, a running systemd instance, or an ARM CPU.
 
-O pacote contem Python puro e declara `Architecture: all`. Portanto, pode ser
-construido em WSL/x86_64 e instalado no ODROID/ARM64. As dependencias nativas
-serao resolvidas pelo APT **no ODROID**, usando a arquitetura dele.
+This is a pure Python package with `Architecture: all`. You can build it on
+WSL/x86_64 and install it on the ODROID/ARM64. APT resolves native dependencies
+**on the ODROID**, using the ODROID's architecture.
 
-### 1. Instalar ferramentas com sudo
+### 1. Install build tools with sudo
 
-Na maquina de build:
+On the build machine:
 
 ```sh
 sudo apt update
@@ -81,16 +83,16 @@ sudo apt install git build-essential debhelper dh-python \
   python3-wheel
 ```
 
-Para transferir o pacote por SCP ou SFTP, instale tambem o cliente SSH:
+To transfer the package using SCP or SFTP, also install the SSH client:
 
 ```sh
 sudo apt install openssh-client
 ```
 
-### 2. Clonar sua versao dentro da pasta pessoal
+### 2. Clone your fork inside your home directory
 
-No WSL, use o sistema de arquivos Linux (`~/build`), nao `/mnt/c`, para evitar
-problemas de permissoes, desempenho e finais de linha.
+On WSL, use the Linux filesystem (`~/build`), not `/mnt/c`, to avoid permission,
+performance, and line-ending issues.
 
 ```sh
 mkdir -p ~/build
@@ -99,102 +101,140 @@ git clone https://github.com/joaomorenorf/odroid-hc4-oled-stats.git
 cd odroid-hc4-oled-stats
 ```
 
-**Nao e mais necessario executar o antigo bloco de atualizacao de arquivos.**
-Os ajustes Python 3/pyproject/debhelper ja estao versionados neste fork, inclusive
-para WSL. Clonar diretamente `tobetter/odroid-homecloud` nao inclui estes ajustes
-nem o seu monitor modificado.
+**The old file-update block is no longer needed.** The Python 3, pyproject,
+and debhelper changes are already tracked in this fork, including for WSL.
+Cloning `tobetter/odroid-homecloud` directly does not include these changes
+or the modified statistics monitor.
 
-### 3. Gerar o pacote sem sudo
+### 3. Build the package without sudo
 
 ```sh
 dpkg-buildpackage -us -uc -b
 ls -lh ../odroid-homecloud-display_*.deb
-dpkg-deb --field ../odroid-homecloud-display_0.4.0_all.deb Package Version Architecture Depends
+dpkg-deb --field ../odroid-homecloud-display_0.4.1_all.deb Package Version Architecture Depends
 ```
 
-O resultado desta versao e `../odroid-homecloud-display_0.4.0_all.deb`.
-Arquivos `.changes` e `.buildinfo` tambem sao gerados na pasta pai.
-Nenhum deles, nem os diretorios temporarios de build, deve ser commitado.
-O build nao instala nem inicia o servico na maquina de empacotamento.
+This version produces `../odroid-homecloud-display_0.4.1_all.deb`.
+The parent directory also receives `.changes` and `.buildinfo` files.
+Do not commit these files or temporary build directories.
+The build does not install or start the service on the packaging machine.
 
-### 4. Transferir para o ODROID
+### 4. Transfer the package to the ODROID
 
-Substitua `IP_DO_ODROID` pelo endereco real. O SSH precisa estar habilitado no
-ODROID, e a identidade do servidor deve ser conferida na primeira conexao.
-Use **uma** das opcoes abaixo. Troque a versao no nome se estiver usando outra.
+Replace `ODROID_IP` with the actual address. SSH must be enabled on the ODROID;
+verify the server's identity when connecting for the first time.
+Choose **one** of the following methods. Adjust the version in the filename
+when using a different release.
 
 **SCP:**
 
 ```sh
-scp ../odroid-homecloud-display_0.4.0_all.deb root@IP_DO_ODROID:/root/
+scp ../odroid-homecloud-display_0.4.1_all.deb root@ODROID_IP:/root/
 ```
 
-**SFTP interativo:**
+**Interactive SFTP:**
 
 ```sh
-sftp root@IP_DO_ODROID
+sftp root@ODROID_IP
 ```
 
-No prompt `sftp>`, partindo da pasta do projeto na maquina de build:
+At the `sftp>` prompt, starting from the project directory on the build machine:
 
 ```text
 lcd ..
 cd /root
-put odroid-homecloud-display_0.4.0_all.deb
+put odroid-homecloud-display_0.4.1_all.deb
 bye
 ```
 
-Nao e necessario habilitar login SSH de root: se ele estiver desabilitado,
-transfira para um usuario comum:
+You do not need to enable SSH root login. If it is disabled, transfer the file
+to a regular user instead:
 
 ```sh
-scp ../odroid-homecloud-display_0.4.0_all.deb USUARIO@IP_DO_ODROID:
+scp ../odroid-homecloud-display_0.4.1_all.deb USER@ODROID_IP:
 ```
 
-Para SFTP com usuario comum, conecte com `sftp USUARIO@IP_DO_ODROID`, execute
-`lcd ..`, `put odroid-homecloud-display_0.4.0_all.deb` e `bye`; omita `cd /root`.
+For SFTP as a regular user, connect with `sftp USER@ODROID_IP`, then run
+`lcd ..`, `put odroid-homecloud-display_0.4.1_all.deb`, and `bye`; omit `cd /root`.
 
-### 5. Instalar e validar no ODROID
+### 5. Install and validate on the ODROID
 
-No terminal do ODROID, como root:
+In the ODROID terminal, as root:
 
 ```sh
 apt update
-apt install /root/odroid-homecloud-display_0.4.0_all.deb
+apt install /root/odroid-homecloud-display_0.4.1_all.deb
 systemctl status odroid-homecloud-display --no-pager
 ```
 
-Ou, se transferiu para um usuario comum, no diretorio pessoal desse usuario:
+Or, if you transferred the file to a regular user, from that user's home:
 
 ```sh
 sudo apt update
-sudo apt install ./odroid-homecloud-display_0.4.0_all.deb
+sudo apt install ./odroid-homecloud-display_0.4.1_all.deb
 sudo systemctl status odroid-homecloud-display --no-pager
 ```
 
-O APT instala Pillow, luma e `iproute2` para a arquitetura do ODROID.
-Nao use `pip` como root. Se alguma dependencia nao estiver disponivel, confira
-os repositorios da distribuicao; no Ubuntu, pode ser necessario habilitar
-`universe`. A maquina de destino deve usar uma versao de Debian/Ubuntu que
-forneca as dependencias declaradas no pacote.
+APT installs Pillow, luma, and `iproute2` for the ODROID's architecture.
+Do not run `pip` as root. If a dependency is unavailable, check your
+distribution's repositories; Ubuntu may require enabling `universe`.
+The target must run a Debian/Ubuntu release that provides the dependencies
+declared by the package.
 
-A instalacao pelo debhelper habilita/inicia o servico, respeitando a politica
-local de servicos. Confira o status e a tela fisica: construir o `.deb` no WSL
-nao valida hardware, I2C ou o funcionamento real do servico no ODROID.
+The debhelper installation scripts enable/start the service, subject to local
+service policy. Check both the service status and the physical screen:
+building a `.deb` on WSL does not validate the ODROID's hardware or I2C setup.
 
-### Configuracao e diagnostico
+## Configuration and diagnostics
 
-A primeira instalacao cria `/etc/default/odroid-homecloud`, sem sobrescrever
-uma configuracao existente:
+The first installation creates `/etc/default/odroid-homecloud` with these
+defaults, without overwriting an existing configuration:
 
 ```sh
 HOMECLOUD_DISPLAY_PORT=0
 HOMECLOUD_DISPLAY_ROTATE=2
 HOMECLOUD_DISPLAY_ADDRESS=0x3c
+HOMECLOUD_ZFS_DATASET=tank
 ```
 
-Esses valores selecionam o barramento I2C, a rotacao (0 a 3, em passos de 90
-graus) e o endereco hexadecimal. Ajuste-os ao seu hardware e reinicie:
+The display settings select the I2C bus, rotation (0 to 3, in 90-degree steps),
+and hexadecimal device address. The driver is `ssd1306`; there is no automatic
+chipset selection. An incorrect address or driver can prevent the display
+from working.
+
+### Selecting a ZFS pool or dataset
+
+`HOMECLOUD_ZFS_DATASET` selects the **ZFS dataset name**, not a disk device
+such as `/dev/sda`. A pool's root dataset, such as `backup`, is valid, as is a
+child dataset such as `tank/media`. List available names on the ODROID:
+
+```sh
+sudo zfs list -o name,used,available
+sudoedit /etc/default/odroid-homecloud
+```
+
+For example, add or change this line:
+
+```sh
+HOMECLOUD_ZFS_DATASET=backup
+```
+
+The corresponding display line will look like:
+
+```text
+backup: 450,0 / 2000,0 GB
+```
+
+For a child dataset, use `HOMECLOUD_ZFS_DATASET=tank/media`; the label becomes
+`tank/media`. Long labels are compressed along with the rest of the line.
+
+**Upgrading an existing installation:** the package preserves your current
+configuration file. Add `HOMECLOUD_ZFS_DATASET=...` yourself to select another
+dataset. If the variable is absent, the program continues using `tank`.
+Do not leave the value empty; an empty value is a configuration error
+reported in the service journal.
+
+Restart the service after changing any setting:
 
 ```sh
 sudo systemctl restart odroid-homecloud-display
@@ -203,14 +243,14 @@ sudo journalctl -u odroid-homecloud-display -n 50 --no-pager
 ls -l /dev/i2c-*
 ```
 
-O driver usado nesta versao e `ssd1306`; nao ha selecao automatica de chipset.
-Um endereco ou driver incorreto pode impedir o funcionamento do display.
+### Print the actual display lines without accessing the OLED
 
-Para obter as linhas reais que o programa prepararia **sem acessar o OLED**,
-execute no ODROID depois da instalacao:
+After installation, run this on the ODROID. It loads the settings from
+`/etc/default/odroid-homecloud`, including the selected ZFS dataset.
+Keep that file in the simple shell-compatible `NAME=value` format shown above.
 
 ```sh
-python3 - <<'PY'
+sudo sh -c 'set -a; . /etc/default/odroid-homecloud; exec python3 -' <<'PY'
 import time
 from odroid_homecloud_display import clock
 
@@ -227,61 +267,78 @@ pages = [[
     *clock.storage_lines(),
 ]] + clock.network_pages(128)
 for index, lines in enumerate(pages, 1):
-    print(f"--- Pagina {index} ---")
+    print(f"--- Page {index} ---")
     print("\n".join(lines))
 PY
 ```
 
-Esse comando mostra uma amostra pontual das linhas, nao uma captura dos pixels;
-os valores variam e as linhas longas podem ser comprimidas ao desenhar.
-Se compartilhar a saida, revise antes os enderecos IP e nomes de interfaces.
+This prints a snapshot of the logical lines, not a pixel capture. Values change
+over time, and long lines may be compressed when rendered.
+Review IP addresses and interface names before sharing the output.
 
-## Pipeline: gerar o .deb no GitHub
+## Pipeline: build the .deb on GitHub
 
-O workflow [Build Debian package](./.github/workflows/build-deb.yml) roda em
-Ubuntu 24.04 a cada push e pull request. Tambem pode ser executado manualmente:
+The [Build Debian package](./.github/workflows/build-deb.yml) workflow runs on
+Ubuntu 24.04 for every push and pull request. You can also run it manually:
 
-1. Abra **Actions > Build Debian package > Run workflow** no seu repositorio.
-2. Selecione a branch desejada e execute.
-3. Abra a execucao concluida e baixe o artifact
-   **odroid-homecloud-display-deb**.
-4. Descompacte o ZIP. Ele contem o `.deb` e `SHA256SUMS`.
-5. Na pasta extraida, execute `sha256sum -c SHA256SUMS` e transfira o `.deb`
-   por SCP ou SFTP conforme as instrucoes anteriores.
+1. Open **Actions > Build Debian package > Run workflow** in your repository.
+2. Select the branch and start the workflow.
+3. Open the successful run and download **odroid-homecloud-display-deb**
+   from its artifacts.
+4. Extract the ZIP; it contains the `.deb` and `SHA256SUMS`.
+5. Run `sha256sum -c SHA256SUMS` in the extracted directory, then transfer the
+   `.deb` using SCP or SFTP as described above.
 
-Tambem e possivel usar o GitHub CLI:
+You can also use the GitHub CLI:
 
 ```sh
 gh workflow run build-deb.yml --repo joaomorenorf/odroid-hc4-oled-stats
 gh run list --workflow build-deb.yml --repo joaomorenorf/odroid-hc4-oled-stats
-gh run download ID_DA_EXECUCAO --repo joaomorenorf/odroid-hc4-oled-stats \
-  --name odroid-homecloud-display-deb --dir artifacts
-cd artifacts
+gh run download RUN_ID --repo joaomorenorf/odroid-hc4-oled-stats \
+  --name odroid-homecloud-display-deb --dir artifacts/RUN_ID
+cd artifacts/RUN_ID
 sha256sum -c SHA256SUMS
 ```
 
-Substitua `ID_DA_EXECUCAO` pelo ID da execucao bem-sucedida. A pipeline publica
-somente artifacts temporarios (30 dias), nao instala nada no ODROID, nao cria
-uma Release e nao incrementa a versao automaticamente.
-Em forks novos, o GitHub pode pedir que voce habilite Actions primeiro.
+Replace both occurrences of `RUN_ID` in the download command and the directory
+name with the successful run's ID. Use a fresh directory for each download:
+`gh run download` does not overwrite existing files.
 
-### Proximas versoes
+The pipeline retains artifacts for 30 days. It does not install anything on
+the ODROID, create a GitHub Release, or increment the version automatically.
+New forks may require enabling Actions first.
 
-Atualize a versao tanto em [setup.py](./setup.py) quanto no topo de
-[debian/changelog](./debian/changelog), documente as mudancas e envie um commit.
-O proximo push gera um novo pacote com essa versao. Incremente a versao para
-que o APT reconheca atualizacoes; o workflow verifica se a versao Debian e a
-mesma usada no nome do `.deb`.
+### Future versions
 
-## Arquivos publicaveis e artefatos locais
+Update the version in both [setup.py](./setup.py) and the first entry of
+[debian/changelog](./debian/changelog), describe the changes, and push a commit.
+The next push builds a package with that version. Increment it so APT recognizes
+updates. The workflow checks that the Python and Debian versions match and
+verifies the resulting package's version and architecture.
 
-O codigo Python, `pyproject.toml`, `setup.py`, os arquivos-fonte em `debian/`,
-a documentacao, a licenca e o workflow pertencem ao repositorio.
-[.gitignore](./.gitignore) exclui caches, ambientes virtuais, metadados Python,
-staging do debhelper, pacotes e outros resultados de build. Esses arquivos
-podem continuar na sua maquina, mas nao entram no fork.
+## Tests
 
-O projeto original continua em
+Run the focused storage tests without an OLED, ZFS installation, or third-party
+Python dependencies:
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+The tests isolate display-library imports and mock storage queries. They check
+the default dataset, configured pools and child datasets, screen labels, and
+failure cases; they do not validate the physical display.
+The Debian build also runs these tests through pybuild.
+
+## Repository sources and local artifacts
+
+Python source, tests, `pyproject.toml`, `setup.py`, packaging sources in `debian/`,
+documentation, the license, and the workflow belong in the repository.
+[.gitignore](./.gitignore) excludes caches, virtual environments, Python build
+metadata, debhelper staging files, packages, and other build output. These can
+remain on your machine without being published in the fork.
+
+The original project is
 [tobetter/odroid-homecloud](https://github.com/tobetter/odroid-homecloud).
-O pacote inclui tambem os creditos e termos MIT em
+The installed package includes its credits and MIT terms in
 `/usr/share/doc/odroid-homecloud-display/copyright`.

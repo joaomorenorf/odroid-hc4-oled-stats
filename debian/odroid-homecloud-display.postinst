@@ -7,6 +7,7 @@ if [ "$1" = "configure" ] && [ ! -f /etc/default/odroid-homecloud ]; then
 HOMECLOUD_DISPLAY_PORT=0
 HOMECLOUD_DISPLAY_ROTATE=2
 HOMECLOUD_DISPLAY_ADDRESS=0x3c
+HOMECLOUD_ZFS_DATASET=tank
 __EOF
 fi
 

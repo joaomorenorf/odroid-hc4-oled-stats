@@ -52,6 +52,10 @@ def temperature():
 
 
 def storage_lines():
+    dataset = os.getenv("HOMECLOUD_ZFS_DATASET", "tank")
+    if not dataset.strip():
+        raise ValueError("HOMECLOUD_ZFS_DATASET must not be empty")
+
     try:
         sd = shutil.disk_usage("/")
         sd_line = (
@@ -64,16 +68,16 @@ def storage_lines():
     try:
         zfs = shutil.which("zfs") or "/usr/sbin/zfs"
         used, available = map(int, command([
-            zfs, "list", "-Hp", "-o", "used,available", "tank"
+            zfs, "list", "-Hp", "-o", "used,available", dataset
         ]).split())
-        tank_line = (
-            f"tank: {decimal(used / 1e9)} / "
+        zfs_line = (
+            f"{dataset}: {decimal(used / 1e9)} / "
             f"{decimal((used + available) / 1e9)} GB"
         )
     except (OSError, ValueError, subprocess.SubprocessError):
-        tank_line = "tank: unavailable"
+        zfs_line = f"{dataset}: unavailable"
 
-    return [sd_line, tank_line]
+    return [sd_line, zfs_line]
 
 
 def text_width(text):

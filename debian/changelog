@@ -1,3 +1,13 @@
+odroid-homecloud (0.4.1) unstable; urgency=medium
+
+  * Translate the README and packaging tutorial into English.
+  * Allow HOMECLOUD_ZFS_DATASET to select the monitored ZFS pool or dataset
+    and show its name on the display, retaining tank as the default.
+  * Document configuration upgrades and environment-aware diagnostics.
+  * Add regression tests for ZFS selection and unavailable storage.
+
+ -- João Moreno <19269649+joaomorenorf@users.noreply.github.com>  Fri, 16 Oct 2026 19:35:00 +0000
+
 odroid-homecloud (0.4.0) unstable; urgency=medium
 
   * Display rotating CPU, RAM, storage and network statistics on the HC4 OLED.

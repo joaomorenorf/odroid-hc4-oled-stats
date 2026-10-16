@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
         name = 'odroid-homecloud',
-        version = '0.4.0',
+        version = '0.4.1',
         description = 'System statistics for the ODROID HC4 OLED display',
         author = 'Dongjin Kim',
         author_email = 'tobetter@gmail.com',
