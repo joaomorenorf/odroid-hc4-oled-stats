@@ -1,9 +1,6 @@
 #!/usr/bin/make -f
 
-%:
-	dh $@ --with=python3 --buildsystem=pybuild --with=systemd
+export PYBUILD_NAME=odroid-homecloud
 
-override_dh_auto_install:
-	dh_auto_install
-	dh_systemd_enable || true
-	dh_systemd_start || true
+%:
+	dh $@ --with python3 --buildsystem=pybuild

@@ -1,3 +1,14 @@
+odroid-homecloud (0.4.0) unstable; urgency=medium
+
+  * Display rotating CPU, RAM, storage and network statistics on the HC4 OLED.
+  * Build an architecture-independent Python 3 package using debhelper 13
+    and the pyproject backend, without pip calls during installation.
+  * Declare runtime dependencies through APT and retain upstream licensing.
+  * Document remote builds, WSL, SCP and SFTP installation.
+  * Generate Debian package artifacts with GitHub Actions.
+
+ -- João Moreno <19269649+joaomorenorf@users.noreply.github.com>  Fri, 16 Oct 2026 19:17:37 +0000
+
 odroid-homecloud (0.3) stable; urgency=medium
 
   * Add to set I2C slave address

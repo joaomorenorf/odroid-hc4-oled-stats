@@ -27,6 +27,26 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Debian build output (keep packaging sources in debian/)
+/.pybuild/
+/artifacts/
+*.deb
+*.ddeb
+*.udeb
+*.buildinfo
+*.changes
+*.dsc
+*.orig.tar.*
+*.debian.tar.*
+/debian/.debhelper/
+/debian/debhelper-build-stamp
+/debian/files
+/debian/tmp/
+/debian/odroid-homecloud-display/
+/debian/*.debhelper
+/debian/*.substvars
+/.vscode/
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
